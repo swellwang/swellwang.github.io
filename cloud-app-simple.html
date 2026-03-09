@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账户总额记录 - 云端版</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="cloud-styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 账户总额记录</h1>
+            <p class="subtitle">实时追踪您的资产状况 - 云端同步版</p>
+        </header>
+
+        <div id="authContainer" class="auth-container">
+            <div class="auth-tabs">
+                <button class="auth-tab active" id="tab-login" onclick="showLogin()">登录</button>
+                <button class="auth-tab" id="tab-register" onclick="showRegister()">注册</button>
+            </div>
+            
+            <div id="loginForm" class="auth-form" style="display: block;">
+                <h2>欢迎回来</h2>
+                <form onsubmit="handleLogin(event)">
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="loginEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="loginPassword" required placeholder="请输入密码">
+                    </div>
+                    <button type="submit" class="btn-auth">登录</button>
+                </form>
+                <div class="auth-footer">
+                    <p>还没有账户？<a href="#" onclick="showRegister(); return false;">立即注册</a></p>
+                </div>
+            </div>
+            
+            <div id="registerForm" class="auth-form" style="display: none;">
+                <h2>创建账户</h2>
+                <form onsubmit="handleRegister(event)">
+                    <div class="form-group">
+                        <label>用户名</label>
+                        <input type="text" id="registerUsername" required placeholder="3-30 个字符" minlength="3" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>邮箱</label>
+                        <input type="email" id="registerEmail" required placeholder="your@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label>密码</label>
+                        <input type="password" id="registerPassword" required placeholder="至少 6 位" minlength="6">
+                    </div>
+                    <button type="submit" class="btn-auth">注册</button>
+                </form>
+                <div class="auth-footer">
+                    <p>已有账户？<a href="#" onclick="showLogin(); return false;">立即登录</a></p>
+                </div>
+            </div>
+        </div>
+
+        <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+            <div class="loading-spinner"></div>
+            <p>正在加载...</p>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        // Supabase 配置
+        const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaW13aWFpdGx4ZXprcmZ2bWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDgyMzksImV4cCI6MjA4ODYyNDIzOX0.xe5OFTrIWDXh3KqUe_HSYPK5u6YffZk1ni4pLnpk7eM';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        let currentUser = null;
+
+        // 显示登录界面
+        function showLogin() {
+            console.log('切换到登录界面');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('tab-login').classList.add('active');
+            document.getElementById('tab-register').classList.remove('active');
+        }
+
+        // 显示注册界面
+        function showRegister() {
+            console.log('切换到注册界面');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('tab-login').classList.remove('active');
+            document.getElementById('tab-register').classList.add('active');
+        }
+
+        // 处理登录
+        async function handleLogin(e) {
+            e.preventDefault();
+            showLoading();
+            
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            
+            try {
+                const { data, error } = await supabase.auth.signInWithPassword({
+                    email,
+                    password
+                });
+                
+                if (error) throw error;
+                
+                currentUser = data.user;
+                alert('登录成功！用户 ID: ' + data.user.id);
+                // 登录成功后可以跳转到其他页面或加载主界面
+            } catch (error) {
+                console.error('登录错误:', error);
+                alert('登录失败：' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        // 处理注册
+        async function handleRegister(e) {
+            e.preventDefault();
+            showLoading();
+            
+            const username = document.getElementById('registerUsername').value;
+            const email = document.getElementById('registerEmail').value;
+            const password = document.getElementById('registerPassword').value;
+            
+            try {
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email,
+                    password,
+                    options: {
+                        data: {
+                            username: username
+                        }
+                    }
+                });
+                
+                if (authError) throw authError;
+                
+                // 创建用户记录
+                if (authData.user) {
+                    const { error: dbError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: authData.user.id,
+                            username: username,
+                            email: email,
+                            accounts: { 1: 0, 2: 0 }
+                        });
+                    
+                    if (dbError) {
+                        console.error('创建用户记录失败:', dbError);
+                        alert('注册成功但创建用户记录失败：' + dbError.message);
+                    } else {
+                        alert('注册成功！用户 ID: ' + authData.user.id);
+                        currentUser = authData.user;
+                        showLogin();
+                    }
+                }
+            } catch (error) {
+                console.error('注册错误:', error);
+                alert('注册失败：' + error.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function showLoading() {
+            document.getElementById('loadingOverlay').style.display = 'flex';
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingOverlay').style.display = 'none';
+        }
+
+        // 页面加载完成后的初始化
+        console.log('页面加载完成');
+        console.log('Supabase URL:', SUPABASE_URL);
+        console.log('函数已定义:', typeof showRegister, typeof showLogin);
+    </script>
+</body>
+</html>
