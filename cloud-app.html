@@ -16,13 +16,13 @@
 
         <div id="authContainer" class="auth-container">
             <div class="auth-tabs">
-                <button class="auth-tab active" id="tab-login" onclick="showLogin()">登录</button>
-                <button class="auth-tab" id="tab-register" onclick="showRegister()">注册</button>
+                <button class="auth-tab active" id="tab-login" onclick="app.showLogin()">登录</button>
+                <button class="auth-tab" id="tab-register" onclick="app.showRegister()">注册</button>
             </div>
             
             <div id="loginForm" class="auth-form" style="display: block;">
                 <h2>欢迎回来</h2>
-                <form onsubmit="handleLogin(event)">
+                <form onsubmit="app.handleLogin(event)">
                     <div class="form-group">
                         <label>邮箱</label>
                         <input type="email" id="loginEmail" required placeholder="your@email.com">
@@ -34,13 +34,13 @@
                     <button type="submit" class="btn-auth">登录</button>
                 </form>
                 <div class="auth-footer">
-                    <p>还没有账户？<a href="#" onclick="showRegister(); return false;">立即注册</a></p>
+                    <p>还没有账户？<a href="#" onclick="app.showRegister(); return false;">立即注册</a></p>
                 </div>
             </div>
             
             <div id="registerForm" class="auth-form" style="display: none;">
                 <h2>创建账户</h2>
-                <form onsubmit="handleRegister(event)">
+                <form onsubmit="app.handleRegister(event)">
                     <div class="form-group">
                         <label>用户名</label>
                         <input type="text" id="registerUsername" required placeholder="3-30 个字符" minlength="3" maxlength="30">
@@ -56,7 +56,7 @@
                     <button type="submit" class="btn-auth">注册</button>
                 </form>
                 <div class="auth-footer">
-                    <p>已有账户？<a href="#" onclick="showLogin(); return false;">立即登录</a></p>
+                    <p>已有账户？<a href="#" onclick="app.showLogin(); return false;">立即登录</a></p>
                 </div>
             </div>
         </div>
@@ -67,7 +67,7 @@
                     <span>👤 <span id="currentUser">用户</span></span>
                     <span class="sync-status" id="syncStatus">🟢 已连接</span>
                 </div>
-                <button class="btn-logout" onclick="logout()">退出登录</button>
+                <button class="btn-logout" onclick="app.logout()">退出登录</button>
             </div>
 
             <div class="total-display">
@@ -103,15 +103,15 @@
                                 placeholder="输入备注信息（可选）"
                             >
                         </div>
-                        <button class="btn-add" onclick="addToAccount(1)">
+                        <button class="btn-add" onclick="app.addToAccount(1)">
                             <span class="btn-icon">+</span> 添加
                         </button>
-                        <button class="btn-set" onclick="setAccount(1)">
+                        <button class="btn-set" onclick="app.setAccount(1)">
                             <span class="btn-icon">⚙</span> 设置
                         </button>
                     </div>
                     <div class="account-actions">
-                        <button class="btn-clear" onclick="clearAccount(1)">清空账户</button>
+                        <button class="btn-clear" onclick="app.clearAccount(1)">清空账户</button>
                     </div>
                 </div>
 
@@ -141,15 +141,15 @@
                                 placeholder="输入备注信息（可选）"
                             >
                         </div>
-                        <button class="btn-add" onclick="addToAccount(2)">
+                        <button class="btn-add" onclick="app.addToAccount(2)">
                             <span class="btn-icon">+</span> 添加
                         </button>
-                        <button class="btn-set" onclick="setAccount(2)">
+                        <button class="btn-set" onclick="app.setAccount(2)">
                             <span class="btn-icon">⚙</span> 设置
                         </button>
                     </div>
                     <div class="account-actions">
-                        <button class="btn-clear" onclick="clearAccount(2)">清空账户</button>
+                        <button class="btn-clear" onclick="app.clearAccount(2)">清空账户</button>
                     </div>
                 </div>
             </div>
@@ -157,24 +157,426 @@
             <div class="transaction-history">
                 <h3>📊 交易记录</h3>
                 <div class="history-filters">
-                    <button class="filter-btn active" onclick="filterHistory('all')">全部</button>
-                    <button class="filter-btn" onclick="filterHistory('1')">WSW</button>
-                    <button class="filter-btn" onclick="filterHistory('2')">XD</button>
+                    <button class="filter-btn active" onclick="app.filterHistory('all')">全部</button>
+                    <button class="filter-btn" onclick="app.filterHistory('1')">WSW</button>
+                    <button class="filter-btn" onclick="app.filterHistory('2')">XD</button>
                 </div>
                 <div class="history-list" id="historyList">
                     <div class="empty-history">暂无交易记录</div>
                 </div>
-                <button class="btn-clear-history" onclick="clearHistory()">清空记录</button>
+                <button class="btn-clear-history" onclick="app.clearHistory()">清空记录</button>
             </div>
         </div>
     </div>
 
-    <div id="loadingOverlay" class="loading-overlay">
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
         <div class="loading-spinner"></div>
         <p>正在加载...</p>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <script src="cloud-app.js"></script>
+    <script>
+        // 创建全局应用对象
+        window.app = (function() {
+            const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaW13aWFpdGx4ZXprcmZ2bWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDgyMzksImV4cCI6MjA4ODYyNDIzOX0.xe5OFTrIWDXh3KqUe_HSYPK5u6YffZk1ni4pLnpk7eM';
+            
+            const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            let currentUser = null;
+            let realtimeChannel = null;
+            
+            const state = {
+                accounts: { 1: 0, 2: 0 },
+                transactions: [],
+                currentFilter: 'all'
+            };
+
+            // 初始化
+            async function init() {
+                console.log('🚀 应用初始化...');
+                document.getElementById('loadingOverlay').style.display = 'none';
+                
+                try {
+                    const { data: { session } } = await supabase.auth.getSession();
+                    if (session) {
+                        currentUser = session.user;
+                        setupAuthUI(true);
+                        await loadUserData();
+                    } else {
+                        setupAuthUI(false);
+                    }
+                } catch (error) {
+                    console.error('初始化错误:', error);
+                }
+            }
+
+            function showLogin() {
+                console.log('切换到登录');
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('registerForm').style.display = 'none';
+                document.getElementById('tab-login').classList.add('active');
+                document.getElementById('tab-register').classList.remove('active');
+            }
+
+            function showRegister() {
+                console.log('切换到注册');
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('registerForm').style.display = 'block';
+                document.getElementById('tab-login').classList.remove('active');
+                document.getElementById('tab-register').classList.add('active');
+            }
+
+            async function handleLogin(e) {
+                e.preventDefault();
+                console.log('尝试登录...');
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                const email = document.getElementById('loginEmail').value;
+                const password = document.getElementById('loginPassword').value;
+                
+                try {
+                    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+                    if (error) throw error;
+                    
+                    currentUser = data.user;
+                    setupAuthUI(true);
+                    await loadUserData();
+                    showNotification('登录成功', 'success');
+                } catch (error) {
+                    console.error('登录错误:', error);
+                    showNotification('登录失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }
+
+            async function handleRegister(e) {
+                e.preventDefault();
+                console.log('尝试注册...');
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                const username = document.getElementById('registerUsername').value;
+                const email = document.getElementById('registerEmail').value;
+                const password = document.getElementById('registerPassword').value;
+                
+                try {
+                    const { data: authData, error: authError } = await supabase.auth.signUp({
+                        email,
+                        password,
+                        options: { data: { username } }
+                    });
+                    
+                    if (authError) throw authError;
+                    
+                    console.log('Auth 成功，创建用户记录...');
+                    const { error: dbError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: authData.user.id,
+                            username,
+                            email,
+                            accounts: { 1: 0, 2: 0 }
+                        });
+                    
+                    if (dbError) {
+                        console.error('DB 错误:', dbError);
+                        showNotification('注册成功但创建记录失败：' + dbError.message, 'error');
+                    } else {
+                        currentUser = authData.user;
+                        setupAuthUI(true);
+                        showNotification('注册成功！', 'success');
+                    }
+                } catch (error) {
+                    console.error('注册错误:', error);
+                    showNotification('注册失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }
+
+            async function logout() {
+                await supabase.auth.signOut();
+                currentUser = null;
+                state.accounts = { 1: 0, 2: 0 };
+                state.transactions = [];
+                setupAuthUI(false);
+                showNotification('已退出登录', 'info');
+            }
+
+            function setupAuthUI(isLoggedIn) {
+                document.getElementById('authContainer').style.display = isLoggedIn ? 'none' : 'block';
+                document.getElementById('appContent').style.display = isLoggedIn ? 'block' : 'none';
+                if (currentUser) {
+                    document.getElementById('currentUser').textContent = currentUser.user_metadata?.username || '用户';
+                }
+            }
+
+            async function loadUserData() {
+                await Promise.all([loadAccounts(), loadTransactions()]);
+                updateDisplay();
+                renderHistory();
+            }
+
+            async function loadAccounts() {
+                if (!currentUser) return;
+                const { data, error } = await supabase
+                    .from('users')
+                    .select('accounts')
+                    .eq('id', currentUser.id)
+                    .single();
+                if (!error && data) state.accounts = data.accounts;
+            }
+
+            async function loadTransactions() {
+                if (!currentUser) return;
+                const { data, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .order('created_at', { ascending: false })
+                    .limit(100);
+                if (!error) state.transactions = data || [];
+            }
+
+            function updateDisplay() {
+                document.getElementById('account1Balance').textContent = formatCurrency(state.accounts[1]);
+                document.getElementById('account2Balance').textContent = formatCurrency(state.accounts[2]);
+                document.getElementById('totalAmount').textContent = formatCurrency(state.accounts[1] + state.accounts[2]);
+                document.getElementById('lastUpdated').textContent = '最后更新：' + formatDateTime(new Date());
+            }
+
+            async function addToAccount(accountNum) {
+                const input = document.getElementById(`account${accountNum}Input`);
+                const noteInput = document.getElementById(`account${accountNum}Note`);
+                const amount = parseFloat(input.value);
+                const note = noteInput.value.trim();
+                
+                if (isNaN(amount) || amount <= 0) {
+                    showNotification('请输入有效的金额', 'error');
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                const newBalance = state.accounts[accountNum] + amount;
+                
+                const { error } = await supabase
+                    .from('transactions')
+                    .insert({
+                        user_id: currentUser.id,
+                        account: accountNum,
+                        type: 'add',
+                        amount,
+                        note,
+                        balance_after: newBalance
+                    });
+                
+                if (!error) {
+                    await updateAccountBalance(accountNum, newBalance);
+                    input.value = '';
+                    noteInput.value = '';
+                    showNotification(`成功添加 ${formatCurrency(amount)}`, 'success');
+                } else {
+                    showNotification('操作失败：' + error.message, 'error');
+                }
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            async function setAccount(accountNum) {
+                const input = document.getElementById(`account${accountNum}Input`);
+                const noteInput = document.getElementById(`account${accountNum}Note`);
+                const amount = parseFloat(input.value);
+                const note = noteInput.value.trim();
+                
+                if (isNaN(amount) || amount < 0) {
+                    showNotification('请输入有效的金额', 'error');
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                const oldBalance = state.accounts[accountNum];
+                
+                const { error } = await supabase
+                    .from('transactions')
+                    .insert({
+                        user_id: currentUser.id,
+                        account: accountNum,
+                        type: 'set',
+                        amount,
+                        note,
+                        old_balance: oldBalance,
+                        balance_after: amount
+                    });
+                
+                if (!error) {
+                    await updateAccountBalance(accountNum, amount);
+                    input.value = '';
+                    noteInput.value = '';
+                    showNotification(`设置成功 ${formatCurrency(amount)}`, 'success');
+                } else {
+                    showNotification('操作失败：' + error.message, 'error');
+                }
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            async function clearAccount(accountNum) {
+                if (state.accounts[accountNum] === 0) {
+                    showNotification('账户已经是空的', 'info');
+                    return;
+                }
+                
+                if (!confirm(`确定要清空账户吗？当前余额：${formatCurrency(state.accounts[accountNum])}`)) {
+                    return;
+                }
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                const oldBalance = state.accounts[accountNum];
+                
+                const { error } = await supabase
+                    .from('transactions')
+                    .insert({
+                        user_id: currentUser.id,
+                        account: accountNum,
+                        type: 'clear',
+                        amount: oldBalance,
+                        old_balance: oldBalance,
+                        balance_after: 0
+                    });
+                
+                if (!error) {
+                    await updateAccountBalance(accountNum, 0);
+                    showNotification('账户已清空', 'success');
+                } else {
+                    showNotification('操作失败：' + error.message, 'error');
+                }
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            async function updateAccountBalance(accountNum, balance) {
+                const newAccounts = { ...state.accounts, [accountNum]: balance };
+                const { error } = await supabase
+                    .from('users')
+                    .update({ accounts: newAccounts })
+                    .eq('id', currentUser.id);
+                if (!error) {
+                    state.accounts = newAccounts;
+                    updateDisplay();
+                }
+            }
+
+            function filterHistory(filter) {
+                state.currentFilter = filter;
+                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+                event.target.classList.add('active');
+                renderHistory();
+            }
+
+            function renderHistory() {
+                const historyList = document.getElementById('historyList');
+                let filtered = state.transactions;
+                if (state.currentFilter !== 'all') {
+                    filtered = state.transactions.filter(t => t.account === parseInt(state.currentFilter));
+                }
+                
+                if (filtered.length === 0) {
+                    historyList.innerHTML = '<div class="empty-history">暂无交易记录</div>';
+                    return;
+                }
+                
+                historyList.innerHTML = filtered.map(t => {
+                    const date = new Date(t.created_at);
+                    const typeText = t.type === 'add' ? '➕ 添加' : t.type === 'set' ? '⚙️ 设置' : '🗑️ 清空';
+                    const accountName = t.account === 1 ? 'WSW' : 'XD';
+                    return `
+                        <div class="history-item account-${t.account}">
+                            <div class="history-info">
+                                <div class="history-type">${typeText} - ${accountName}</div>
+                                <div class="history-time">${formatDateTime(date)}</div>
+                                ${t.note ? `<div class="history-note">📝 ${t.note}</div>` : ''}
+                            </div>
+                            <div class="history-amount ${t.type === 'add' ? 'add' : 'set'}">
+                                ${t.type === 'add' ? '+' : ''}${formatCurrency(t.amount)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            async function clearHistory() {
+                if (state.transactions.length === 0) {
+                    showNotification('已经没有记录了', 'info');
+                    return;
+                }
+                if (!confirm('确定要清空所有交易记录吗？')) return;
+                
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                const { error } = await supabase
+                    .from('transactions')
+                    .delete()
+                    .eq('user_id', currentUser.id);
+                
+                if (!error) {
+                    state.transactions = [];
+                    renderHistory();
+                    showNotification('交易记录已清空', 'success');
+                } else {
+                    showNotification('操作失败：' + error.message, 'error');
+                }
+                document.getElementById('loadingOverlay').style.display = 'none';
+            }
+
+            function formatCurrency(amount) {
+                return '¥' + amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+            }
+
+            function formatDateTime(date) {
+                const pad = n => String(n).padStart(2, '0');
+                return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
+            }
+
+            function showNotification(message, type) {
+                const notification = document.createElement('div');
+                notification.textContent = message;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    padding: 15px 25px;
+                    background: ${type === 'success' ? '#48bb78' : type === 'error' ? '#f56565' : '#4299e1'};
+                    color: white;
+                    border-radius: 10px;
+                    box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                    font-weight: 600;
+                    z-index: 10000;
+                    animation: slideIn 0.3s ease;
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => {
+                    notification.style.animation = 'slideOut 0.3s ease';
+                    setTimeout(() => notification.remove(), 300);
+                }, 2000);
+            }
+
+            // 公开需要的方法
+            return {
+                init,
+                showLogin,
+                showRegister,
+                handleLogin,
+                handleRegister,
+                logout,
+                addToAccount,
+                setAccount,
+                clearAccount,
+                filterHistory,
+                clearHistory
+            };
+        })();
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            console.log('页面加载完成');
+            window.app.init();
+        });
+    </script>
 </body>
 </html>
