@@ -25,7 +25,6 @@ async function init() {
   // 检查配置
   if (!isConfigured) {
     showConfigWarning();
-    hideLoading();
     return;
   }
   
@@ -78,6 +77,7 @@ function showConfigWarning() {
         </a>
       </div>
     `;
+    hideLoading();
   }
 }
 
@@ -152,18 +152,30 @@ async function handleAccountUpdate(payload) {
 
 // 显示登录界面
 function showLogin() {
-  document.getElementById('loginForm').style.display = 'block';
-  document.getElementById('registerForm').style.display = 'none';
-  document.querySelectorAll('.auth-tab')[0].classList.add('active');
-  document.querySelectorAll('.auth-tab')[1].classList.remove('active');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const tabs = document.querySelectorAll('.auth-tab');
+  
+  if (loginForm && registerForm && tabs.length >= 2) {
+    loginForm.style.display = 'block';
+    registerForm.style.display = 'none';
+    tabs[0].classList.add('active');
+    tabs[1].classList.remove('active');
+  }
 }
 
 // 显示注册界面
 function showRegister() {
-  document.getElementById('loginForm').style.display = 'none';
-  document.getElementById('registerForm').style.display = 'block';
-  document.querySelectorAll('.auth-tab')[0].classList.remove('active');
-  document.querySelectorAll('.auth-tab')[1].classList.add('active');
+  const loginForm = document.getElementById('loginForm');
+  const registerForm = document.getElementById('registerForm');
+  const tabs = document.querySelectorAll('.auth-tab');
+  
+  if (loginForm && registerForm && tabs.length >= 2) {
+    loginForm.style.display = 'none';
+    registerForm.style.display = 'block';
+    tabs[0].classList.remove('active');
+    tabs[1].classList.add('active');
+  }
 }
 
 // 处理登录
@@ -677,11 +689,17 @@ function showNotification(message, type = 'info') {
 }
 
 function showLoading() {
-  document.getElementById('loadingOverlay').style.display = 'flex';
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'flex';
+  }
 }
 
 function hideLoading() {
-  document.getElementById('loadingOverlay').style.display = 'none';
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'none';
+  }
 }
 
 function updateSyncStatus(status) {
