@@ -3,114 +3,267 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>账户总额记录</title>
-    <link rel="stylesheet" href="style.css">
+    <title>账户总额记录系统</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            color: #2d3748;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #718096;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+        
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            margin-top: 30px;
+        }
+        
+        .version-card {
+            background: #f7fafc;
+            border-radius: 15px;
+            padding: 30px;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .version-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            border-color: #667eea;
+        }
+        
+        .version-card h2 {
+            font-size: 1.5rem;
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .version-card .icon {
+            font-size: 3rem;
+            margin-bottom: 15px;
+        }
+        
+        .version-card ul {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+        
+        .version-card ul li {
+            padding: 8px 0;
+            color: #4a5568;
+        }
+        
+        .version-card ul li:before {
+            content: "✅ ";
+            margin-right: 8px;
+        }
+        
+        .btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-align: center;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        
+        .btn-secondary {
+            background: #edf2f7;
+            color: #2d3748;
+        }
+        
+        .btn-secondary:hover {
+            background: #e2e8f0;
+            transform: translateY(-2px);
+        }
+        
+        .features {
+            margin-top: 40px;
+            padding-top: 40px;
+            border-top: 2px solid #e2e8f0;
+        }
+        
+        .features h3 {
+            font-size: 1.8rem;
+            color: #2d3748;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .feature-item {
+            text-align: center;
+            padding: 20px;
+            background: white;
+            border-radius: 10px;
+        }
+        
+        .feature-item .icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+        
+        .feature-item p {
+            color: #4a5568;
+            font-size: 0.95rem;
+        }
+        
+        .docs {
+            margin-top: 40px;
+            padding: 30px;
+            background: #f7fafc;
+            border-radius: 15px;
+        }
+        
+        .docs h3 {
+            color: #2d3748;
+            margin-bottom: 15px;
+        }
+        
+        .docs a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+        }
+        
+        .docs a:hover {
+            text-decoration: underline;
+        }
+        
+        .docs ul {
+            margin-top: 15px;
+            margin-left: 20px;
+        }
+        
+        .docs li {
+            margin-bottom: 8px;
+            color: #4a5568;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>💰 账户总额记录</h1>
-            <p class="subtitle">实时追踪您的资产状况</p>
-        </header>
-
-        <div class="total-display">
-            <div class="total-label">账户总额</div>
-            <div class="total-amount" id="totalAmount">¥0.00</div>
-            <div class="last-updated" id="lastUpdated">最后更新：从未</div>
-        </div>
-
-        <div class="accounts-grid">
-            <div class="account-card account-1">
-                <div class="account-header">
-                    <div class="account-icon">🏦</div>
-                    <h2>WSW</h2>
-                </div>
-                <div class="account-balance" id="account1Balance">¥0.00</div>
-                <div class="input-group">
-                    <label for="account1Input">输入金额</label>
-                    <div class="input-wrapper">
-                        <span class="currency-symbol">¥</span>
-                        <input 
-                            type="number" 
-                            id="account1Input" 
-                            placeholder="0.00" 
-                            step="0.01" 
-                            min="0"
-                        >
-                    </div>
-                    <div class="input-wrapper">
-                        <span class="currency-symbol">📝</span>
-                        <input 
-                            type="text" 
-                            id="account1Note" 
-                            placeholder="输入备注信息（可选）"
-                        >
-                    </div>
-                    <button class="btn-add" onclick="addToAccount(1)">
-                        <span class="btn-icon">+</span> 添加
-                    </button>
-                    <button class="btn-set" onclick="setAccount(1)">
-                        <span class="btn-icon">⚙</span> 设置
-                    </button>
-                </div>
-                <div class="account-actions">
-                    <button class="btn-clear" onclick="clearAccount(1)">清空账户</button>
-                </div>
+        <h1>💰 账户总额记录系统</h1>
+        <p class="subtitle">简单、安全、实时的个人财务管理工具</p>
+        
+        <div class="version-grid">
+            <!-- 云端版 -->
+            <div class="version-card">
+                <div class="icon">☁️</div>
+                <h2>云端同步版</h2>
+                <ul>
+                    <li>多设备实时同步</li>
+                    <li>用户注册和登录</li>
+                    <li>交易记录增删改</li>
+                    <li>云端数据存储</li>
+                    <li>支持多人使用</li>
+                </ul>
+                <a href="cloud-app.html" class="btn">立即使用</a>
             </div>
-
-            <div class="account-card account-2">
-                <div class="account-header">
-                    <div class="account-icon">💳</div>
-                    <h2>XD</h2>
+            
+            <!-- 本地版 -->
+            <div class="version-card">
+                <div class="icon">💻</div>
+                <h2>本地单机版</h2>
+                <ul>
+                    <li>无需网络连接</li>
+                    <li>数据存储在本地</li>
+                    <li>简单易用</li>
+                    <li>快速启动</li>
+                    <li>隐私安全</li>
+                </ul>
+                <a href="index.html" class="btn btn-secondary">打开本地版</a>
+            </div>
+        </div>
+        
+        <div class="features">
+            <h3>✨ 主要特性</h3>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="icon">🔒</div>
+                    <p>数据安全加密</p>
                 </div>
-                <div class="account-balance" id="account2Balance">¥0.00</div>
-                <div class="input-group">
-                    <label for="account2Input">输入金额</label>
-                    <div class="input-wrapper">
-                        <span class="currency-symbol">¥</span>
-                        <input 
-                            type="number" 
-                            id="account2Input" 
-                            placeholder="0.00" 
-                            step="0.01" 
-                            min="0"
-                        >
-                    </div>
-                    <div class="input-wrapper">
-                        <span class="currency-symbol">📝</span>
-                        <input 
-                            type="text" 
-                            id="account2Note" 
-                            placeholder="输入备注信息（可选）"
-                        >
-                    </div>
-                    <button class="btn-add" onclick="addToAccount(2)">
-                        <span class="btn-icon">+</span> 添加
-                    </button>
-                    <button class="btn-set" onclick="setAccount(2)">
-                        <span class="btn-icon">⚙</span> 设置
-                    </button>
+                <div class="feature-item">
+                    <div class="icon">📱</div>
+                    <p>响应式设计</p>
                 </div>
-                <div class="account-actions">
-                    <button class="btn-clear" onclick="clearAccount(2)">清空账户</button>
+                <div class="feature-item">
+                    <div class="icon">📊</div>
+                    <p>交易记录管理</p>
+                </div>
+                <div class="feature-item">
+                    <div class="icon">📝</div>
+                    <p>备注信息</p>
+                </div>
+                <div class="feature-item">
+                    <div class="icon">🔄</div>
+                    <p>实时同步</p>
+                </div>
+                <div class="feature-item">
+                    <div class="icon">🎨</div>
+                    <p>精美界面</p>
                 </div>
             </div>
         </div>
-
-        <div class="transaction-history">
-            <h3>📊 交易记录</h3>
-            <div class="history-filters">
-                <button class="filter-btn active" onclick="filterHistory('all')">全部</button>
-                <button class="filter-btn" onclick="filterHistory('1')">账户一</button>
-                <button class="filter-btn" onclick="filterHistory('2')">账户二</button>
-            </div>
-            <div class="history-list" id="historyList">
-                <div class="empty-history">暂无交易记录</div>
-            </div>
-            <button class="btn-clear-history" onclick="clearHistory()">清空记录</button>
+        
+        <div class="docs">
+            <h3>📚 文档和部署指南</h3>
+            <p>想要自己部署？查看以下文档：</p>
+            <ul>
+                <li><a href="QUICK_START.md" target="_blank">⚡ 5 分钟快速配置指南</a> - 最适合新手</li>
+                <li><a href="DEPLOYMENT.md" target="_blank">🚀 完整部署指南</a> - 详细的部署说明</li>
+                <li><a href="README.md" target="_blank">📋 项目 README</a> - 项目介绍和技术文档</li>
+            </ul>
         </div>
     </div>
-
-    <script src="script.js"></script>
 </body>
 </html>
