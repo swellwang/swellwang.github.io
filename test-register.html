@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>测试注册</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 { color: #333; }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        button {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #5568d3;
+        }
+        .message {
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 15px;
+            display: none;
+        }
+        .message.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        .message.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        .logs {
+            margin-top: 20px;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 测试注册功能</h1>
+        
+        <div class="form-group">
+            <label>用户名</label>
+            <input type="text" id="username" placeholder="testuser">
+        </div>
+        
+        <div class="form-group">
+            <label>邮箱</label>
+            <input type="email" id="email" placeholder="test@example.com">
+        </div>
+        
+        <div class="form-group">
+            <label>密码</label>
+            <input type="password" id="password" placeholder="至少 6 位">
+        </div>
+        
+        <button onclick="testRegister()">测试注册</button>
+        
+        <div id="message" class="message"></div>
+        
+        <div class="logs" id="logs">
+            <strong>日志:</strong><br>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaW13aWFpdGx4ZXprcmZ2bWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDgyMzksImV4cCI6MjA4ODYyNDIzOX0.xe5OFTrIWDXh3KqUe_HSYPK5u6YffZk1ni4pLnpk7eM';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        function log(message) {
+            const logs = document.getElementById('logs');
+            const time = new Date().toLocaleTimeString();
+            logs.innerHTML += `[${time}] ${message}<br>`;
+            logs.scrollTop = logs.scrollHeight;
+            console.log(message);
+        }
+        
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            msg.textContent = text;
+            msg.className = `message ${type}`;
+            msg.style.display = 'block';
+        }
+        
+        async function testRegister() {
+            const username = document.getElementById('username').value || `test_${Date.now()}`;
+            const email = document.getElementById('email').value || `test_${Date.now()}@example.com`;
+            const password = document.getElementById('password').value || 'Test123456';
+            
+            log('开始注册测试...');
+            log(`用户名：${username}`);
+            log(`邮箱：${email}`);
+            
+            try {
+                // 步骤 1: 检查 Supabase 连接
+                log('步骤 1: 检查 Supabase 连接...');
+                const { data: pingData, error: pingError } = await supabase.from('users').select('count').limit(1);
+                if (pingError) {
+                    if (pingError.message.includes('does not exist') || pingError.message.includes('relation')) {
+                        log('❌ 错误：users 表不存在！');
+                        log('请先运行 supabase-setup-final.sql 脚本创建表');
+                        showMessage('错误：数据库表不存在！请先在 Supabase SQL Editor 中运行 supabase-setup-final.sql 脚本', 'error');
+                        return;
+                    } else {
+                        log('❌ Supabase 连接错误：' + pingError.message);
+                        showMessage('Supabase 连接失败：' + pingError.message, 'error');
+                        return;
+                    }
+                }
+                log('✅ Supabase 连接成功，表存在');
+                
+                // 步骤 2: 尝试注册
+                log('步骤 2: 尝试注册 Supabase 用户...');
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            username: username
+                        }
+                    }
+                });
+                
+                if (authError) {
+                    log('❌ 注册失败：' + authError.message);
+                    showMessage('注册失败：' + authError.message, 'error');
+                    return;
+                }
+                
+                log('✅ Supabase 用户注册成功！用户 ID: ' + authData.user.id);
+                
+                // 步骤 3: 创建用户记录
+                log('步骤 3: 在 users 表中创建记录...');
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .insert({
+                        id: authData.user.id,
+                        username: username,
+                        email: email,
+                        accounts: { 1: 0, 2: 0 }
+                    });
+                
+                if (userError) {
+                    log('❌ 创建用户记录失败：' + userError.message);
+                    log('错误详情：' + JSON.stringify(userError));
+                    showMessage('创建用户记录失败：' + userError.message + '\n\n请检查：\n1. users 表是否存在\n2. RLS 策略是否正确\n3. 用户是否有 INSERT 权限', 'error');
+                    
+                    // 尝试删除刚创建的 auth 用户
+                    log('清理：尝试删除刚创建的 auth 用户...');
+                    await supabase.auth.admin.deleteUser(authData.user.id);
+                    return;
+                }
+                
+                log('✅ 用户记录创建成功！');
+                log('✅ 注册完整流程成功！');
+                showMessage('🎉 注册成功！\n\n用户 ID: ' + authData.user.id + '\n用户名：' + username + '\n\n现在可以关闭此页面，返回 cloud-app.html 使用正常功能了。', 'success');
+                
+            } catch (error) {
+                log('❌ 未知错误：' + error.message);
+                log('错误堆栈：' + error.stack);
+                showMessage('未知错误：' + error.message, 'error');
+            }
+        }
+        
+        // 页面加载时检查表是否存在
+        window.addEventListener('DOMContentLoaded', async () => {
+            log('页面加载完成，开始自动检查...');
+            
+            try {
+                const { error } = await supabase.from('users').select('count').limit(1);
+                if (error) {
+                    if (error.message.includes('does not exist') || error.message.includes('relation')) {
+                        log('⚠️ 检测到 users 表不存在！');
+                        showMessage('⚠️ 数据库表未创建！\n\n请点击浏览器地址栏访问：\nhttps://supabase.com/dashboard/project/ehimwiaitlxezkrfvmea/sql/new\n\n然后复制并运行项目中的 supabase-setup-final.sql 文件内容', 'error');
+                    } else {
+                        log('⚠️ 数据库访问错误：' + error.message);
+                    }
+                } else {
+                    log('✅ 数据库表检查通过');
+                    showMessage('✅ 数据库连接正常！请填写信息并点击"测试注册"按钮', 'success');
+                }
+            } catch (error) {
+                log('检查失败：' + error.message);
+            }
+        });
+    </script>
+</body>
+</html>
