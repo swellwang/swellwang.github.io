@@ -1,6 +1,13 @@
 // Supabase 配置 - 请在使用前替换为您的 Supabase 项目配置
+// 获取配置方法：
+// 1. 访问 https://supabase.com 创建项目
+// 2. 进入 Dashboard -> Settings -> API
+// 3. 复制 Project URL 和 anon public 密钥
 const SUPABASE_URL = 'YOUR_SUPABASE_URL';
 const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+
+// 检查配置是否已设置
+const isConfigured = SUPABASE_URL !== 'https://ehimwiaitlxezkrfvmea.supabase.co' && SUPABASE_ANON_KEY !== 'sb_publishable_MY6ekN3aRjQSISI2R_eVaw_qLK5o1tW';
 
 // 初始化 Supabase 客户端
 let supabase;
@@ -15,6 +22,13 @@ const state = {
 
 // 初始化应用
 async function init() {
+  // 检查配置
+  if (!isConfigured) {
+    showConfigWarning();
+    hideLoading();
+    return;
+  }
+  
   try {
     // 初始化 Supabase
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -36,6 +50,35 @@ async function init() {
   }
   
   hideLoading();
+}
+
+// 显示配置警告
+function showConfigWarning() {
+  const authContainer = document.getElementById('authContainer');
+  if (authContainer) {
+    authContainer.innerHTML = `
+      <div style="text-align: center; padding: 40px;">
+        <h2 style="color: #f56565; margin-bottom: 20px;">⚠️ 需要配置 Supabase</h2>
+        <p style="color: #4a5568; margin-bottom: 30px; line-height: 1.6;">
+          您需要先配置 Supabase 才能使用此应用。<br>
+          请按照以下步骤操作：
+        </p>
+        <div style="text-align: left; background: #f7fafc; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+          <h3 style="color: #2d3748; margin-bottom: 15px;">📝 配置步骤：</h3>
+          <ol style="color: #4a5568; line-height: 2;">
+            <li>访问 <a href="https://supabase.com" target="_blank" style="color: #667eea;">supabase.com</a> 创建免费账户</li>
+            <li>创建新项目（选择新加坡区域）</li>
+            <li>在 SQL Editor 中运行 <code>supabase-setup.sql</code> 脚本</li>
+            <li>在 Settings → API 中复制 Project URL 和 anon key</li>
+            <li>打开 <code>cloud-app.js</code> 文件，替换第 8-9 行的配置</li>
+          </ol>
+        </div>
+        <a href="QUICK_START.md" target="_blank" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">
+          📖 查看详细配置指南
+        </a>
+      </div>
+    `;
+  }
 }
 
 // 设置实时订阅
