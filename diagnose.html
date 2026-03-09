@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase 诊断工具</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f7fafc;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+        .status {
+            padding: 15px;
+            border-radius: 10px;
+            margin: 15px 0;
+            font-weight: 600;
+        }
+        .status.success {
+            background: #c6f6d5;
+            color: #276749;
+        }
+        .status.error {
+            background: #fed7d7;
+            color: #c53030;
+        }
+        .status.warning {
+            background: #feebc8;
+            color: #c05621;
+        }
+        .status.info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+        button {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            margin: 10px 5px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+        .result {
+            background: #f7fafc;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .check-item {
+            padding: 10px;
+            margin: 5px 0;
+            border-left: 4px solid #cbd5e0;
+        }
+        .check-item.pass {
+            border-left-color: #48bb78;
+            background: #f0fff4;
+        }
+        .check-item.fail {
+            border-left-color: #f56565;
+            background: #fff5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Supabase 配置诊断工具</h1>
+        <p>检查您的 Supabase 设置是否正确</p>
+        
+        <button onclick="runDiagnostics()">运行完整诊断</button>
+        <button onclick="testRegistration()">测试注册功能</button>
+        <button onclick="createTables()">创建数据库表</button>
+        
+        <div id="results"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaW13aWFpdGx4ZXprcmZ2bWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDgyMzksImV4cCI6MjA4ODYyNDIzOX0.xe5OFTrIWDXh3KqUe_HSYPK5u6YffZk1ni4pLnpk7eM';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        function log(message, type = 'info') {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.textContent = message;
+            results.appendChild(div);
+        }
+        
+        function logCheck(message, pass) {
+            const results = document.getElementById('results');
+            const div = document.createElement('div');
+            div.className = `check-item ${pass ? 'pass' : 'fail'}`;
+            div.innerHTML = (pass ? '✅ ' : '❌ ') + message;
+            results.appendChild(div);
+        }
+        
+        async function runDiagnostics() {
+            document.getElementById('results').innerHTML = '';
+            log('开始诊断...', 'info');
+            
+            // 检查 1: Supabase 连接
+            try {
+                const { data, error } = await supabase.from('users').select('count').limit(1);
+                if (error) {
+                    if (error.message.includes('relation') || error.message.includes('does not exist')) {
+                        logCheck('Supabase 连接成功，但表不存在', false);
+                        log('需要创建数据库表！请点击"创建数据库表"按钮', 'error');
+                    } else {
+                        logCheck('Supabase 连接失败：' + error.message, false);
+                    }
+                } else {
+                    logCheck('Supabase 连接成功', true);
+                }
+            } catch (error) {
+                logCheck('Supabase 连接测试失败：' + error.message, false);
+            }
+            
+            // 检查 2: 认证功能
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                logCheck('Supabase Auth 可用', true);
+            } catch (error) {
+                logCheck('Supabase Auth 失败：' + error.message, false);
+            }
+            
+            // 检查 3: 检查表是否存在
+            try {
+                const { count, error } = await supabase.from('users').select('*', { count: 'exact', head: true });
+                if (!error) {
+                    logCheck('users 表存在', true);
+                }
+            } catch (error) {
+                logCheck('users 表不存在或无法访问', false);
+            }
+            
+            try {
+                const { count, error } = await supabase.from('transactions').select('*', { count: 'exact', head: true });
+                if (!error) {
+                    logCheck('transactions 表存在', true);
+                }
+            } catch (error) {
+                logCheck('transactions 表不存在或无法访问', false);
+            }
+            
+            log('诊断完成！', 'info');
+        }
+        
+        async function testRegistration() {
+            document.getElementById('results').innerHTML = '';
+            log('测试注册功能...', 'info');
+            
+            const testEmail = `test_${Date.now()}@example.com`;
+            const testPassword = 'Test123456';
+            
+            try {
+                const { data, error } = await supabase.auth.signUp({
+                    email: testEmail,
+                    password: testPassword,
+                    options: {
+                        data: {
+                            username: 'TestUser'
+                        }
+                    }
+                });
+                
+                if (error) {
+                    log('注册失败：' + error.message, 'error');
+                    return;
+                }
+                
+                log('✅ 注册成功！用户 ID: ' + data.user.id, 'success');
+                log('请检查邮箱确认（如果启用了邮箱验证）', 'info');
+                
+                // 尝试创建用户记录
+                if (data.user) {
+                    const { error: dbError } = await supabase
+                        .from('users')
+                        .insert({
+                            id: data.user.id,
+                            username: 'TestUser',
+                            email: testEmail,
+                            accounts: { 1: 0, 2: 0 }
+                        });
+                    
+                    if (dbError) {
+                        log('创建用户记录失败：' + dbError.message, 'error');
+                        log('可能需要先创建 users 表', 'warning');
+                    } else {
+                        log('✅ 用户记录创建成功', 'success');
+                    }
+                }
+            } catch (error) {
+                log('测试失败：' + error.message, 'error');
+            }
+        }
+        
+        async function createTables() {
+            document.getElementById('results').innerHTML = '';
+            log('⚠️ 注意：创建表需要在 Supabase SQL Editor 中运行脚本', 'warning');
+            
+            const sqlScript = `
+-- 创建 users 表
+CREATE TABLE IF NOT EXISTS users (
+    id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+    username TEXT NOT NULL,
+    email TEXT NOT NULL,
+    accounts JSONB DEFAULT '{"1": 0, "2": 0}'::jsonb,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW()),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- 创建 transactions 表
+CREATE TABLE IF NOT EXISTS transactions (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+    account INTEGER NOT NULL CHECK (account IN (1, 2)),
+    type TEXT NOT NULL CHECK (type IN ('add', 'set', 'clear')),
+    amount DECIMAL(12, 2) NOT NULL,
+    note TEXT DEFAULT '',
+    old_balance DECIMAL(12, 2),
+    balance_after DECIMAL(12, 2) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT TIMEZONE('utc', NOW())
+);
+
+-- 创建索引
+CREATE INDEX IF NOT EXISTS idx_transactions_user_id ON transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_transactions_created_at ON transactions(created_at DESC);
+
+-- 启用 RLS
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE transactions ENABLE ROW LEVEL SECURITY;
+
+-- 创建策略
+CREATE POLICY IF NOT EXISTS "users_select_policy" ON users FOR SELECT USING (auth.uid() = id);
+CREATE POLICY IF NOT EXISTS "users_insert_policy" ON users FOR INSERT WITH CHECK (auth.uid() = id);
+CREATE POLICY IF NOT EXISTS "users_update_policy" ON users FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY IF NOT EXISTS "transactions_select_policy" ON transactions FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY IF NOT EXISTS "transactions_insert_policy" ON transactions FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY IF NOT EXISTS "transactions_update_policy" ON transactions FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY IF NOT EXISTS "transactions_delete_policy" ON transactions FOR DELETE USING (auth.uid() = user_id);
+`;
+            
+            const resultDiv = document.createElement('div');
+            resultDiv.className = 'result';
+            resultDiv.innerHTML = `
+<strong>请在 Supabase SQL Editor 中运行以下脚本：</strong>
+
+1. 访问：https://supabase.com/dashboard/project/ehimwiaitlxezkrfvmea/sql/new
+2. 复制下面的 SQL 脚本
+3. 点击 "Run" 按钮
+
+${sqlScript}
+            `;
+            document.getElementById('results').appendChild(resultDiv);
+            
+            log('SQL 脚本已生成，请按照说明操作', 'info');
+        }
+        
+        // 自动运行诊断
+        window.addEventListener('DOMContentLoaded', runDiagnostics);
+    </script>
+</body>
+</html>
