@@ -3,8 +3,8 @@
 // 1. 访问 https://supabase.com 创建项目
 // 2. 进入 Dashboard -> Settings -> API
 // 3. 复制 Project URL 和 anon public 密钥
-const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_MY6ekN3aRjQSISI2R_eVaw_qLK5o1tW';
 
 // 检查配置是否已设置
 const isConfigured = SUPABASE_URL !== 'https://ehimwiaitlxezkrfvmea.supabase.co' && SUPABASE_ANON_KEY !== 'sb_publishable_MY6ekN3aRjQSISI2R_eVaw_qLK5o1tW';
