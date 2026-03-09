@@ -70,7 +70,7 @@ function showConfigWarning() {
             <li>创建新项目（选择新加坡区域）</li>
             <li>在 SQL Editor 中运行 <code>supabase-setup.sql</code> 脚本</li>
             <li>在 Settings → API 中复制 Project URL 和 anon key</li>
-            <li>打开 <code>cloud-app.js</code> 文件，替换第 8-9 行的配置</li>
+            <li>打开 <code>cloud-app.js</code> 文件，替换第 6-7 行的配置</li>
           </ol>
         </div>
         <a href="QUICK_START.md" target="_blank" style="display: inline-block; padding: 12px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 10px; font-weight: 600;">
@@ -700,5 +700,12 @@ function updateSyncStatus(status) {
   }
 }
 
-// 页面加载时初始化
-document.addEventListener('DOMContentLoaded', init);
+// 页面加载时初始化 - 立即隐藏 loading
+document.addEventListener('DOMContentLoaded', function() {
+  // 先隐藏 loading，防止卡住
+  const loadingOverlay = document.getElementById('loadingOverlay');
+  if (loadingOverlay) {
+    loadingOverlay.style.display = 'none';
+  }
+  init();
+});
