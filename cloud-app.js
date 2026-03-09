@@ -22,8 +22,10 @@ const state = {
 
 // 初始化应用
 async function init() {
+  console.log('初始化应用...');
   // 检查配置
   if (!isConfigured) {
+    console.log('未配置 Supabase');
     showConfigWarning();
     return;
   }
@@ -31,6 +33,7 @@ async function init() {
   try {
     // 初始化 Supabase
     supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    console.log('Supabase 客户端初始化成功');
     
     // 检查登录状态
     const { data: { session } } = await supabase.auth.getSession();
@@ -67,7 +70,7 @@ function showConfigWarning() {
           <ol style="color: #4a5568; line-height: 2;">
             <li>访问 <a href="https://supabase.com" target="_blank" style="color: #667eea;">supabase.com</a> 创建免费账户</li>
             <li>创建新项目（选择新加坡区域）</li>
-            <li>在 SQL Editor 中运行 <code>supabase-setup.sql</code> 脚本</li>
+            <li>在 SQL Editor 中运行 <code>supabase-setup-final.sql</code> 脚本</li>
             <li>在 Settings → API 中复制 Project URL 和 anon key</li>
             <li>打开 <code>cloud-app.js</code> 文件，替换第 6-7 行的配置</li>
           </ol>
@@ -152,6 +155,7 @@ async function handleAccountUpdate(payload) {
 
 // 显示登录界面
 function showLogin() {
+  console.log('切换到登录界面');
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const tabs = document.querySelectorAll('.auth-tab');
@@ -166,6 +170,7 @@ function showLogin() {
 
 // 显示注册界面
 function showRegister() {
+  console.log('切换到注册界面');
   const loginForm = document.getElementById('loginForm');
   const registerForm = document.getElementById('registerForm');
   const tabs = document.querySelectorAll('.auth-tab');
@@ -181,6 +186,7 @@ function showRegister() {
 // 处理登录
 async function handleLogin(e) {
   e.preventDefault();
+  console.log('尝试登录...');
   showLoading();
   
   const email = document.getElementById('loginEmail').value;
@@ -210,6 +216,7 @@ async function handleLogin(e) {
 // 处理注册
 async function handleRegister(e) {
   e.preventDefault();
+  console.log('尝试注册...');
   showLoading();
   
   const username = document.getElementById('registerUsername').value;
@@ -230,6 +237,8 @@ async function handleRegister(e) {
     
     if (authError) throw authError;
     
+    console.log('Auth 注册成功，用户 ID:', authData.user.id);
+    
     // 创建用户账户记录
     if (authData.user) {
       const { error: dbError } = await supabase
@@ -241,12 +250,16 @@ async function handleRegister(e) {
           accounts: { 1: 0, 2: 0 }
         });
       
-      if (dbError) throw dbError;
+      if (dbError) {
+        console.error('创建用户记录失败:', dbError);
+        showNotification('创建用户记录失败：' + dbError.message, 'error');
+      } else {
+        console.log('用户记录创建成功');
+        currentUser = authData.user;
+        setupAuthUI(true);
+        showNotification('注册成功！', 'success');
+      }
     }
-    
-    currentUser = authData.user;
-    setupAuthUI(true);
-    showNotification('注册成功！', 'success');
   } catch (error) {
     console.error('注册错误:', error);
     showNotification(error.message || '注册失败', 'error');
@@ -718,8 +731,9 @@ function updateSyncStatus(status) {
   }
 }
 
-// 页面加载时初始化 - 立即隐藏 loading
+// 页面加载完成时初始化
 document.addEventListener('DOMContentLoaded', function() {
+  console.log('DOM 加载完成，开始初始化...');
   // 先隐藏 loading，防止卡住
   const loadingOverlay = document.getElementById('loadingOverlay');
   if (loadingOverlay) {
@@ -741,3 +755,5 @@ window.filterHistory = filterHistory;
 window.clearHistory = clearHistory;
 window.editTransaction = editTransaction;
 window.deleteTransaction = deleteTransaction;
+
+console.log('✅ 所有函数已定义并暴露到全局作用域');
