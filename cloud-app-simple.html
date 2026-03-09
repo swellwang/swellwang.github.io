@@ -67,6 +67,25 @@
         </div>
     </div>
 
+    <script>
+        // 预先定义函数，防止 onclick 找不到
+        window.showLogin = function() {
+            console.log('切换到登录界面');
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('registerForm').style.display = 'none';
+            document.getElementById('tab-login').classList.add('active');
+            document.getElementById('tab-register').classList.remove('active');
+        };
+
+        window.showRegister = function() {
+            console.log('切换到注册界面');
+            document.getElementById('loginForm').style.display = 'none';
+            document.getElementById('registerForm').style.display = 'block';
+            document.getElementById('tab-login').classList.remove('active');
+            document.getElementById('tab-register').classList.add('active');
+        };
+    </script>
+    
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script>
         // Supabase 配置
@@ -76,26 +95,8 @@
         const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
         let currentUser = null;
 
-        // 显示登录界面
-        function showLogin() {
-            console.log('切换到登录界面');
-            document.getElementById('loginForm').style.display = 'block';
-            document.getElementById('registerForm').style.display = 'none';
-            document.getElementById('tab-login').classList.add('active');
-            document.getElementById('tab-register').classList.remove('active');
-        }
-
-        // 显示注册界面
-        function showRegister() {
-            console.log('切换到注册界面');
-            document.getElementById('loginForm').style.display = 'none';
-            document.getElementById('registerForm').style.display = 'block';
-            document.getElementById('tab-login').classList.remove('active');
-            document.getElementById('tab-register').classList.add('active');
-        }
-
         // 处理登录
-        async function handleLogin(e) {
+        window.handleLogin = async function(e) {
             e.preventDefault();
             showLoading();
             
@@ -112,17 +113,16 @@
                 
                 currentUser = data.user;
                 alert('登录成功！用户 ID: ' + data.user.id);
-                // 登录成功后可以跳转到其他页面或加载主界面
             } catch (error) {
                 console.error('登录错误:', error);
                 alert('登录失败：' + error.message);
             } finally {
                 hideLoading();
             }
-        }
+        };
 
         // 处理注册
-        async function handleRegister(e) {
+        window.handleRegister = async function(e) {
             e.preventDefault();
             showLoading();
             
@@ -143,7 +143,6 @@
                 
                 if (authError) throw authError;
                 
-                // 创建用户记录
                 if (authData.user) {
                     const { error: dbError } = await supabase
                         .from('users')
@@ -169,20 +168,17 @@
             } finally {
                 hideLoading();
             }
-        }
+        };
 
-        function showLoading() {
+        window.showLoading = function() {
             document.getElementById('loadingOverlay').style.display = 'flex';
-        }
+        };
 
-        function hideLoading() {
+        window.hideLoading = function() {
             document.getElementById('loadingOverlay').style.display = 'none';
-        }
+        };
 
-        // 页面加载完成后的初始化
-        console.log('页面加载完成');
-        console.log('Supabase URL:', SUPABASE_URL);
-        console.log('函数已定义:', typeof showRegister, typeof showLogin);
+        console.log('✅ 所有函数已定义');
     </script>
 </body>
 </html>
