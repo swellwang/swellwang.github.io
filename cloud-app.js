@@ -4,7 +4,7 @@
 // 2. 进入 Dashboard -> Settings -> API
 // 3. 复制 Project URL 和 anon public 密钥
 const SUPABASE_URL = 'https://ehimwiaitlxezkrfvmea.supabase.co';
-const SUPABASE_ANON_KEY = 'sb_publishable_MY6ekN3aRjQSISI2R_eVaw_qLK5o1tW';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVoaW13aWFpdGx4ZXprcmZ2bWVhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNDgyMzksImV4cCI6MjA4ODYyNDIzOX0.xe5OFTrIWDXh3KqUe_HSYPK5u6YffZk1ni4pLnpk7eM';
 
 // 检查配置是否已设置
 const isConfigured = SUPABASE_URL !== 'https://ehimwiaitlxezkrfvmea.supabase.co' && SUPABASE_ANON_KEY !== 'sb_publishable_MY6ekN3aRjQSISI2R_eVaw_qLK5o1tW';
