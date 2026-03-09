@@ -1,60 +1,116 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>你今天烦死了吗?</title>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
-    <!-- Bootstrap -->
-    <link href="css/bootstrap.min.css" rel="stylesheet" media="screen">
-  </head>
-  <body>
-    <div class="container-fluid">
-  <div class="row-fluid">
-    <div class="span8">
-      <div class="row-fluid">
-        <div class="span12">
+    <title>账户总额记录</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>💰 账户总额记录</h1>
+            <p class="subtitle">实时追踪您的资产状况</p>
+        </header>
+
+        <div class="total-display">
+            <div class="total-label">账户总额</div>
+            <div class="total-amount" id="totalAmount">¥0.00</div>
+            <div class="last-updated" id="lastUpdated">最后更新：从未</div>
         </div>
-      </div>
-      <h1 class="text-center">
-        烦！
-      </h1> <button class="btn btn-block btn-inverse" type="button">世界上本没有烦恼，烦的人多了，也就有了烦恼</button>
-      <div class="row-fluid">
-        <div class="span12">
+
+        <div class="accounts-grid">
+            <div class="account-card account-1">
+                <div class="account-header">
+                    <div class="account-icon">🏦</div>
+                    <h2>WSW</h2>
+                </div>
+                <div class="account-balance" id="account1Balance">¥0.00</div>
+                <div class="input-group">
+                    <label for="account1Input">输入金额</label>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">¥</span>
+                        <input 
+                            type="number" 
+                            id="account1Input" 
+                            placeholder="0.00" 
+                            step="0.01" 
+                            min="0"
+                        >
+                    </div>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">📝</span>
+                        <input 
+                            type="text" 
+                            id="account1Note" 
+                            placeholder="输入备注信息（可选）"
+                        >
+                    </div>
+                    <button class="btn-add" onclick="addToAccount(1)">
+                        <span class="btn-icon">+</span> 添加
+                    </button>
+                    <button class="btn-set" onclick="setAccount(1)">
+                        <span class="btn-icon">⚙</span> 设置
+                    </button>
+                </div>
+                <div class="account-actions">
+                    <button class="btn-clear" onclick="clearAccount(1)">清空账户</button>
+                </div>
+            </div>
+
+            <div class="account-card account-2">
+                <div class="account-header">
+                    <div class="account-icon">💳</div>
+                    <h2>XD</h2>
+                </div>
+                <div class="account-balance" id="account2Balance">¥0.00</div>
+                <div class="input-group">
+                    <label for="account2Input">输入金额</label>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">¥</span>
+                        <input 
+                            type="number" 
+                            id="account2Input" 
+                            placeholder="0.00" 
+                            step="0.01" 
+                            min="0"
+                        >
+                    </div>
+                    <div class="input-wrapper">
+                        <span class="currency-symbol">📝</span>
+                        <input 
+                            type="text" 
+                            id="account2Note" 
+                            placeholder="输入备注信息（可选）"
+                        >
+                    </div>
+                    <button class="btn-add" onclick="addToAccount(2)">
+                        <span class="btn-icon">+</span> 添加
+                    </button>
+                    <button class="btn-set" onclick="setAccount(2)">
+                        <span class="btn-icon">⚙</span> 设置
+                    </button>
+                </div>
+                <div class="account-actions">
+                    <button class="btn-clear" onclick="clearAccount(2)">清空账户</button>
+                </div>
+            </div>
         </div>
-      </div>
-      <h1 class="text-center">
-        死！
-      </h1> <button class="btn btn-block btn-inverse" type="button">一天烦不可怕，可怕的是烦一辈子</button>
-      <div class="row-fluid">
-        <div class="span12">
+
+        <div class="transaction-history">
+            <h3>📊 交易记录</h3>
+            <div class="history-filters">
+                <button class="filter-btn active" onclick="filterHistory('all')">全部</button>
+                <button class="filter-btn" onclick="filterHistory('1')">账户一</button>
+                <button class="filter-btn" onclick="filterHistory('2')">账户二</button>
+            </div>
+            <div class="history-list" id="historyList">
+                <div class="empty-history">暂无交易记录</div>
+            </div>
+            <button class="btn-clear-history" onclick="clearHistory()">清空记录</button>
         </div>
-      </div>
-      <h1 class="text-center">
-        了！
-      </h1> <button class="btn btn-block btn-inverse" type="button">其实没有人比你更烦了</button>
     </div>
-    <div class="span4">
-      <div class="row-fluid">
-        <div class="span12">
-        </div>
-      </div>
-      <img alt="140x140" src="bg.jpg" class="img-polaroid" />
-      <h3>
-        今天你烦死了吗？
-      </h3>
-      <blockquote>
-        <h4>
-          <em>四体不勤，五谷不分，异想天开，不如AI。</em>
-        </h4>
-      </blockquote>
-      <div>
-        本公众号最大的正能量可能来自于机器人客服——小王。
-      </div>
-      
-    </div>
-  </div>
-</div>
-    <script src="http://code.jquery.com/jquery.js"></script>
-    <script src="js/bootstrap.min.js"></script>
-  </body>
+
+    <script src="script.js"></script>
+</body>
 </html>
