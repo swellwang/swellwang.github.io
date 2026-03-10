@@ -87,21 +87,11 @@
                         <label for="account1Input">输入金额</label>
                         <div class="input-wrapper">
                             <span class="currency-symbol">¥</span>
-                            <input 
-                                type="number" 
-                                id="account1Input" 
-                                placeholder="0.00" 
-                                step="0.01" 
-                                min="0"
-                            >
+                            <input type="number" id="account1Input" placeholder="0.00" step="0.01" min="0">
                         </div>
                         <div class="input-wrapper">
                             <span class="currency-symbol">📝</span>
-                            <input 
-                                type="text" 
-                                id="account1Note" 
-                                placeholder="输入备注信息（可选）"
-                            >
+                            <input type="text" id="account1Note" placeholder="输入备注信息（可选）">
                         </div>
                         <button class="btn-add" onclick="app.addToAccount(1)">
                             <span class="btn-icon">+</span> 添加
@@ -125,21 +115,11 @@
                         <label for="account2Input">输入金额</label>
                         <div class="input-wrapper">
                             <span class="currency-symbol">¥</span>
-                            <input 
-                                type="number" 
-                                id="account2Input" 
-                                placeholder="0.00" 
-                                step="0.01" 
-                                min="0"
-                            >
+                            <input type="number" id="account2Input" placeholder="0.00" step="0.01" min="0">
                         </div>
                         <div class="input-wrapper">
                             <span class="currency-symbol">📝</span>
-                            <input 
-                                type="text" 
-                                id="account2Note" 
-                                placeholder="输入备注信息（可选）"
-                            >
+                            <input type="text" id="account2Note" placeholder="输入备注信息（可选）">
                         </div>
                         <button class="btn-add" onclick="app.addToAccount(2)">
                             <span class="btn-icon">+</span> 添加
@@ -356,29 +336,45 @@
                     return;
                 }
                 
+                if (!currentUser) {
+                    showNotification('请先登录', 'error');
+                    return;
+                }
+                
+                console.log('准备添加数据:', { accountNum, amount, note, userId: currentUser.id });
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 const newBalance = state.accounts[accountNum] + amount;
                 
-                const { error } = await supabase
-                    .from('transactions')
-                    .insert({
-                        user_id: currentUser.id,
-                        account: accountNum,
-                        type: 'add',
-                        amount,
-                        note,
-                        balance_after: newBalance
-                    });
-                
-                if (!error) {
+                try {
+                    const { data, error } = await supabase
+                        .from('transactions')
+                        .insert({
+                            user_id: currentUser.id,
+                            account: accountNum,
+                            type: 'add',
+                            amount,
+                            note,
+                            balance_after: newBalance
+                        })
+                        .select();
+                    
+                    console.log('插入结果:', { data, error });
+                    
+                    if (error) {
+                        console.error('插入失败:', error);
+                        throw error;
+                    }
+                    
                     await updateAccountBalance(accountNum, newBalance);
                     input.value = '';
                     noteInput.value = '';
                     showNotification(`成功添加 ${formatCurrency(amount)}`, 'success');
-                } else {
+                } catch (error) {
+                    console.error('添加失败详情:', error);
                     showNotification('操作失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
                 }
-                document.getElementById('loadingOverlay').style.display = 'none';
             }
 
             async function setAccount(accountNum) {
@@ -392,30 +388,43 @@
                     return;
                 }
                 
+                if (!currentUser) {
+                    showNotification('请先登录', 'error');
+                    return;
+                }
+                
+                console.log('准备设置数据:', { accountNum, amount, note, userId: currentUser.id });
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 const oldBalance = state.accounts[accountNum];
                 
-                const { error } = await supabase
-                    .from('transactions')
-                    .insert({
-                        user_id: currentUser.id,
-                        account: accountNum,
-                        type: 'set',
-                        amount,
-                        note,
-                        old_balance: oldBalance,
-                        balance_after: amount
-                    });
-                
-                if (!error) {
+                try {
+                    const { data, error } = await supabase
+                        .from('transactions')
+                        .insert({
+                            user_id: currentUser.id,
+                            account: accountNum,
+                            type: 'set',
+                            amount,
+                            note,
+                            old_balance: oldBalance,
+                            balance_after: amount
+                        })
+                        .select();
+                    
+                    console.log('设置结果:', { data, error });
+                    
+                    if (error) throw error;
+                    
                     await updateAccountBalance(accountNum, amount);
                     input.value = '';
                     noteInput.value = '';
                     showNotification(`设置成功 ${formatCurrency(amount)}`, 'success');
-                } else {
+                } catch (error) {
+                    console.error('设置失败详情:', error);
                     showNotification('操作失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
                 }
-                document.getElementById('loadingOverlay').style.display = 'none';
             }
 
             async function clearAccount(accountNum) {
@@ -428,39 +437,62 @@
                     return;
                 }
                 
+                if (!currentUser) {
+                    showNotification('请先登录', 'error');
+                    return;
+                }
+                
+                console.log('准备清空数据:', { accountNum, oldBalance: state.accounts[accountNum], userId: currentUser.id });
                 document.getElementById('loadingOverlay').style.display = 'flex';
                 const oldBalance = state.accounts[accountNum];
                 
-                const { error } = await supabase
-                    .from('transactions')
-                    .insert({
-                        user_id: currentUser.id,
-                        account: accountNum,
-                        type: 'clear',
-                        amount: oldBalance,
-                        old_balance: oldBalance,
-                        balance_after: 0
-                    });
-                
-                if (!error) {
+                try {
+                    const { data, error } = await supabase
+                        .from('transactions')
+                        .insert({
+                            user_id: currentUser.id,
+                            account: accountNum,
+                            type: 'clear',
+                            amount: oldBalance,
+                            old_balance: oldBalance,
+                            balance_after: 0
+                        })
+                        .select();
+                    
+                    console.log('清空结果:', { data, error });
+                    
+                    if (error) throw error;
+                    
                     await updateAccountBalance(accountNum, 0);
                     showNotification('账户已清空', 'success');
-                } else {
+                } catch (error) {
+                    console.error('清空失败详情:', error);
                     showNotification('操作失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
                 }
-                document.getElementById('loadingOverlay').style.display = 'none';
             }
 
             async function updateAccountBalance(accountNum, balance) {
                 const newAccounts = { ...state.accounts, [accountNum]: balance };
-                const { error } = await supabase
+                
+                console.log('准备更新账户余额:', { accountNum, balance, userId: currentUser.id });
+                
+                const { data, error } = await supabase
                     .from('users')
                     .update({ accounts: newAccounts })
-                    .eq('id', currentUser.id);
-                if (!error) {
-                    state.accounts = newAccounts;
-                    updateDisplay();
+                    .eq('id', currentUser.id)
+                    .select();
+                
+                console.log('更新账户结果:', { data, error });
+                
+                if (error) {
+                    console.error('更新账户失败:', error);
+                    throw error;
                 }
+                
+                state.accounts = newAccounts;
+                updateDisplay();
             }
 
             function filterHistory(filter) {
@@ -495,6 +527,14 @@
                             </div>
                             <div class="history-amount ${t.type === 'add' ? 'add' : 'set'}">
                                 ${t.type === 'add' ? '+' : ''}${formatCurrency(t.amount)}
+                            </div>
+                            <div class="history-actions">
+                                <button class="btn-edit" onclick="app.editTransaction('${t.id}')" title="修改备注">
+                                    ✏️
+                                </button>
+                                <button class="btn-delete" onclick="app.deleteTransaction('${t.id}')" title="删除记录">
+                                    🗑️
+                                </button>
                             </div>
                         </div>
                     `;
@@ -533,6 +573,78 @@
                 return `${date.getFullYear()}-${pad(date.getMonth()+1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`;
             }
 
+            async function editTransaction(transactionId) {
+                const transaction = state.transactions.find(t => t.id === transactionId);
+                if (!transaction) {
+                    showNotification('找不到该交易记录', 'error');
+                    return;
+                }
+                
+                const newNote = prompt('修改备注信息：', transaction.note || '');
+                if (newNote === null) return;
+                
+                console.log('准备更新交易记录:', { transactionId, newNote });
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                try {
+                    const { data, error } = await supabase
+                        .from('transactions')
+                        .update({ note: newNote })
+                        .eq('id', transactionId)
+                        .select();
+                    
+                    console.log('更新结果:', { data, error });
+                    
+                    if (error) throw error;
+                    
+                    const index = state.transactions.findIndex(t => t.id === transactionId);
+                    if (index !== -1) {
+                        state.transactions[index].note = newNote;
+                    }
+                    
+                    renderHistory();
+                    showNotification('备注已更新', 'success');
+                } catch (error) {
+                    console.error('更新失败详情:', error);
+                    showNotification('更新失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }
+
+            async function deleteTransaction(transactionId) {
+                if (!confirm('确定要删除这条交易记录吗？\n\n此操作不会影响账户余额，只会删除交易记录。')) {
+                    return;
+                }
+                
+                const transaction = state.transactions.find(t => t.id === transactionId);
+                if (!transaction) {
+                    showNotification('找不到该交易记录', 'error');
+                    return;
+                }
+                
+                console.log('准备删除交易记录:', { transactionId });
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                try {
+                    const { error } = await supabase
+                        .from('transactions')
+                        .delete()
+                        .eq('id', transactionId);
+                    
+                    if (error) throw error;
+                    
+                    state.transactions = state.transactions.filter(t => t.id !== transactionId);
+                    renderHistory();
+                    showNotification('记录已删除', 'success');
+                } catch (error) {
+                    console.error('删除失败详情:', error);
+                    showNotification('删除失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }
+
             function showNotification(message, type) {
                 const notification = document.createElement('div');
                 notification.textContent = message;
@@ -568,7 +680,9 @@
                 setAccount,
                 clearAccount,
                 filterHistory,
-                clearHistory
+                clearHistory,
+                editTransaction,
+                deleteTransaction
             };
         })();
 
