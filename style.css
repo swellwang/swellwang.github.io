@@ -468,6 +468,17 @@ header h1 {
     transform: scale(1.1);
 }
 
+.btn-edit-amount {
+    background: rgba(72, 187, 120, 0.1);
+    color: var(--success);
+}
+
+.btn-edit-amount:hover {
+    background: var(--success);
+    color: white;
+    transform: scale(1.1);
+}
+
 .btn-delete {
     background: rgba(245, 101, 108, 0.1);
     color: var(--danger);
