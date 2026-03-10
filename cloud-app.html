@@ -532,6 +532,9 @@
                                 <button class="btn-edit" onclick="app.editTransaction('${t.id}')" title="修改备注">
                                     ✏️
                                 </button>
+                                <button class="btn-edit-amount" onclick="app.editTransactionAmount('${t.id}')" title="修改金额">
+                                    💰
+                                </button>
                                 <button class="btn-delete" onclick="app.deleteTransaction('${t.id}')" title="删除记录">
                                     🗑️
                                 </button>
@@ -612,14 +615,126 @@
                 }
             }
 
-            async function deleteTransaction(transactionId) {
-                if (!confirm('确定要删除这条交易记录吗？\n\n此操作不会影响账户余额，只会删除交易记录。')) {
-                    return;
-                }
-                
+            async function editTransactionAmount(transactionId) {
                 const transaction = state.transactions.find(t => t.id === transactionId);
                 if (!transaction) {
                     showNotification('找不到该交易记录', 'error');
+                    return;
+                }
+                
+                const newAmount = prompt(
+                    `修改交易金额：\n当前金额：${formatCurrency(transaction.amount)}`,
+                    transaction.amount.toString()
+                );
+                
+                if (newAmount === null) return;
+                
+                const amount = parseFloat(newAmount);
+                if (isNaN(amount) || amount <= 0) {
+                    showNotification('请输入有效的金额', 'error');
+                    return;
+                }
+                
+                console.log('准备更新交易金额:', { transactionId, oldAmount: transaction.amount, newAmount: amount });
+                document.getElementById('loadingOverlay').style.display = 'flex';
+                
+                try {
+                    // 计算余额变化
+                    const balanceChange = amount - transaction.amount;
+                    const newBalance = transaction.balance_after + balanceChange;
+                    
+                    // 更新交易记录
+                    const { data, error } = await supabase
+                        .from('transactions')
+                        .update({ 
+                            amount: amount,
+                            balance_after: newBalance
+                        })
+                        .eq('id', transactionId)
+                        .select();
+                    
+                    console.log('更新结果:', { data, error });
+                    
+                    if (error) throw error;
+                    
+                    // 更新本地状态
+                    const index = state.transactions.findIndex(t => t.id === transactionId);
+                    if (index !== -1) {
+                        state.transactions[index].amount = amount;
+                        state.transactions[index].balance_after = newBalance;
+                    }
+                    
+                    // 重新计算账户余额
+                    await recalculateAccountBalance(transaction.account);
+                    
+                    renderHistory();
+                    showNotification('金额已更新', 'success');
+                } catch (error) {
+                    console.error('更新失败详情:', error);
+                    showNotification('更新失败：' + error.message, 'error');
+                } finally {
+                    document.getElementById('loadingOverlay').style.display = 'none';
+                }
+            }
+
+            async function recalculateAccountBalance(accountNum) {
+                if (!currentUser) return;
+                
+                console.log('重新计算账户余额:', { accountNum });
+                
+                // 获取该账户的所有交易记录
+                const { data: transactions, error } = await supabase
+                    .from('transactions')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .eq('account', accountNum)
+                    .order('created_at', { ascending: true });
+                
+                if (error) {
+                    console.error('获取交易记录失败:', error);
+                    throw error;
+                }
+                
+                // 重新计算余额
+                let balance = 0;
+                for (const t of transactions) {
+                    if (t.type === 'add') {
+                        balance += t.amount;
+                    } else if (t.type === 'set') {
+                        balance = t.amount;
+                    } else if (t.type === 'clear') {
+                        balance = 0;
+                    }
+                }
+                
+                console.log('计算出的新余额:', { accountNum, balance });
+                
+                // 更新 users 表的余额
+                const newAccounts = { ...state.accounts, [accountNum]: balance };
+                const { error: updateError } = await supabase
+                    .from('users')
+                    .update({ accounts: newAccounts })
+                    .eq('id', currentUser.id);
+                
+                if (updateError) {
+                    console.error('更新账户余额失败:', updateError);
+                    throw updateError;
+                }
+                
+                state.accounts = newAccounts;
+                updateDisplay();
+                
+                return balance;
+            }
+
+            async function deleteTransaction(transactionId) {
+                const transaction = state.transactions.find(t => t.id === transactionId);
+                if (!transaction) {
+                    showNotification('找不到该交易记录', 'error');
+                    return;
+                }
+                
+                if (!confirm(`确定要删除这条交易记录吗？\n\n账户：${transaction.account === 1 ? 'WSW' : 'XD'}\n金额：${formatCurrency(transaction.amount)}\n类型：${transaction.type === 'add' ? '添加' : transaction.type === 'set' ? '设置' : '清空'}\n\n删除后将重新计算账户余额。`)) {
                     return;
                 }
                 
@@ -634,9 +749,14 @@
                     
                     if (error) throw error;
                     
+                    // 从本地状态移除
                     state.transactions = state.transactions.filter(t => t.id !== transactionId);
+                    
+                    // 重新计算账户余额
+                    await recalculateAccountBalance(transaction.account);
+                    
                     renderHistory();
-                    showNotification('记录已删除', 'success');
+                    showNotification('记录已删除，账户余额已更新', 'success');
                 } catch (error) {
                     console.error('删除失败详情:', error);
                     showNotification('删除失败：' + error.message, 'error');
@@ -682,6 +802,7 @@
                 filterHistory,
                 clearHistory,
                 editTransaction,
+                editTransactionAmount,
                 deleteTransaction
             };
         })();
